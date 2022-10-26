@@ -13,4 +13,4 @@
 		//location.href="adminMail";
 	</script>
 </body>
-</html>
+</html> 
