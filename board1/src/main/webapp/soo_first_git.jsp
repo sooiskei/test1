@@ -7,6 +7,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-소스트리 깃 테스트
+소스트리 깃 테스트: from first soo
 </body>
 </html>
