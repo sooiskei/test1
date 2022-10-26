@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="boardns">
+	<!-- Use type aliases to avoid typing the full classname every time. -->
+	<resultMap id="boardResult"      type="board">
+		<result property="num"	     column="num" />
+		<result property="writer"    column="writer" />
+		<result property="subject"   column="subject" />
+		<result property="content"   column="content" />
+		<result property="email"     column="email" />
+		<result property="readcount" column="readcount" />
+		<result property="passwd"    column="passwd" />
+		<result property="ref"     	 column="ref" />
+		<result property="re_step"	 column="re_step" />
+		<result property="re_level"  column="re_level" />
+		<result property="ip"  		 column="ip" />
+		<result property="reg_date"	 column="reg_date" />
+		<result property="del" 		 column="del" />
+	</resultMap>
+	
+	<!-- <select id="list" parameterType="hashMap" resultMap="boardResult"> -->
+	<select id="list" parameterType="board" resultMap="boardResult">
+		select * from (select a.*,rowNum rn from (
+			select * from board
+		<where>
+			<if test="keyword != null and search!='subcon'">
+				${search} like '%'||#{keyword}||'%'
+			</if>
+			<if test="keyword != null and search=='subcon'">
+				subject like '%'||#{keyword}||'%' or
+				content like '%'||#{keyword}||'%'
+			</if>
+		</where>			
+			 order by ref desc,re_step <!-- asc 생략 -->) a )
+			where rn between #{startRow} and #{endRow}
+	</select>
+	<!-- 검색을 먼저하고(where태그), 정렬을 나중에 한다 (order by)
+	<if test="keyword != null and search!='subcon'">: keyword값이 null이 아니다->검색을 했다
+	이렇게 where태그로 검색하고 order by로 정렬 -->
+	
+	<select id="getTotal" parameterType="board" resultType="int">
+		select count(*) from board 
+		<where>
+			<if test="keyword != null and search !='subcon'">
+				${search} like '%'||#{keyword}||'%'
+			</if>
+			<if test="keyword != null and search=='subcon'">
+				subject like '%'||#{keyword}||'%' or
+				content like '%'||#{keyword}||'%'
+			</if>
+		</where>
+	</select>
+	<!-- 동적 sql문 
+	search !='subcon': search의 값 중 하나 subject+content=subcon : 즉,제목+내용이 아니면 => 제목, 내용, 작성자면
+	${search} : search변수에 가변적인 값이 전달(홍길동처럼 정해진 값이 아닌 subject,content,writer변수(컬럼명)) (가변적인 변수전달이라 #이 아닌 $표시)
+	like '%'||#{keyword}||'%' : keyword는 입력칸에 입력된 검색값. -->
+	
+	<select id="select" parameterType="int" resultType="board">
+		select * from board where num=#{num}
+	</select>
+	
+	<!-- num 번호중 최대값 구하기 : 첫번째 글은 1번으로  설정 -->
+	<select id="getMaxNum" resultType="int">
+		select nvl(max(num),0) + 1 from board
+	<!-- 처음 글 작성할 때는 당연히 null인 게 글이 아무것도 없으니까 당연히 db에도 아무런 데이터가 없어서 
+	java에서 계속 num값을 지정해줘도  db상에서는 num컬럼에 저장된 값은 당연히 null값임. 
+	그래서 함수 연산을 위해 max(num)이 null값이면 nvl을 통해 null값을 0으로 치환해주고 거기에0 +1을 더해줌 -->
+	</select>
+	
+	<insert id="insert" parameterType="board">
+	<!--<selectKey keyProperty="num" 
+			order="BEFORE" resultType="int">
+			select nvl(max(num),0) + 1 from board
+		</selectKey> -->
+		insert into board values (#{num},#{writer},#{subject},
+			#{content},#{email},0,#{passwd},#{ref},
+			#{re_step},#{re_level},#{ip},sysdate,'n')
+	</insert>
+	
+	<update id="selectUpdate" parameterType="int">
+		update board set readcount = readcount+1 where num=#{num}
+	</update>
+	
+	<update id="update" parameterType="board">
+		update board set writer=#{writer},subject=#{subject},
+			content=#{content},email=#{email} where num=#{num}
+	</update>
+	
+	<update id="delete" parameterType="int">
+		update board set del='y' where num=#{num}
+	</update>
+	<!-- 삭제라고는 하지만 사실 del컬럼의 상태값을 y로 수정해서 저장하는 것임. 이후 출력시 del컬럼이 y인 것들은 출력안한 것으로 처리 -->
+	
+	<update id="updateRe" parameterType="board">
+		update board set re_step = re_step + 1
+		 where ref=#{ref} and re_step > #{re_step}
+	</update>
+	
+</mapper>
