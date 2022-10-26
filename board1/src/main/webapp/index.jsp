@@ -11,6 +11,7 @@
 	<script type="text/javascript">
 		location.href = "list.do";
 		//location.href="adminMail";
+		//민영 수정
 	</script>
 </body>
 </html>
