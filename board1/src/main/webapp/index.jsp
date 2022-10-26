@@ -9,7 +9,7 @@
 </head>
 <body>
 	<script type="text/javascript">
-		location.href = "list.do";
+	    	location.href = "list.do";
 		//location.href="adminMail";
 	</script>
 </body>
